@@ -1,86 +1,44 @@
-// Datos iniciales de las cotizaciones
-const cotizaciones = {
-    compra: {
-      oficial: 969.50,
-      blue: 1160.00,
-      tarjeta: 0.00,
-      mep: 1135.90,
-    },
-    venta: {
-      oficial: 1009.50,
-      blue: 1180.00,
-      tarjeta: 1615.20,
-      mep: 1135.70,
+//ahora consumiremos una api para tomar los datos
+async function obtenerCotizaciones() {
+    try {
+        const respuesta = await fetch('https://dolarapi.com/v1/dolares');
+        if (!respuesta.ok) {
+            throw new Error(`Error HTTP: ${respuesta.status} - ${respuesta.statusText}`);
+        }
+        const datos = await respuesta.json();
+        return datos;
+    } catch (error) {
+        console.error('Error al obtener cotizaciones:', error.message);
+        return null;
     }
-  };
-  
-  // Función para mostrar las cotizaciones
-  function mostrarCotizaciones() {
-    // Seleccionar el contenedor de cotizaciones
+}
+
+//funcion para mostrar las cotizaciones
+async function mostrarCotizaciones() {
     const seccionCotizaciones = document.getElementById('cotizaciones');
-    if (!seccionCotizaciones) {
-      console.error('Error: No se encontró el contenedor con el ID "cotizaciones".');
-      return;
+    seccionCotizaciones.innerHTML = '<p>Cargando cotizaciones...</p>';//mensaje de espera que es teponral
+    const datos = await obtenerCotizaciones();
+    if (!datos) {
+        seccionCotizaciones.innerHTML = '<p>Error al cargar cotizaciones (revisar resp api)!!!</p>'
+        return;
     }
-  
-    // Crear la card de compra
-    const cardCompra = document.createElement('div');
-    cardCompra.className = 'card';
-    cardCompra.innerHTML = `
-      <h3>Tabla de valores de compra</h3>
-      <p>Dólar oficial: $ ${cotizaciones.compra.oficial}</p>
-      <p>Dólar blue: $ ${cotizaciones.compra.blue}</p>
-      <p>Dólar tarjeta: $ ${cotizaciones.compra.tarjeta}</p>
-      <p>Dólar MEP: $ ${cotizaciones.compra.mep}</p>
+
+// Limpiar las cotizaciones antes de agregar nuevas
+seccionCotizaciones.innerHTML = '';
+
+// Iterar sobre los datos y mostrar las cotizaciones
+    datos.forEach((dolar) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+        <h3>${dolar.nombre} (${dolar.casa.charAt(0).toUpperCase() + dolar.casa.slice(1)})</h3>
+        <p>Compra: $ ${dolar.compra.toFixed(2)}</p>
+        <p>Venta: $ ${dolar.venta.toFixed(2)}</p>
+        <p>Última actualización: ${new Date(dolar.fechaActualizacion).toLocaleString()}</p>
     `;
-  
-    // Crear la card de venta
-    const cardVenta = document.createElement('div');
-    cardVenta.className = 'card';
-    cardVenta.innerHTML = `
-      <h3>Tabla de valores de venta</h3>
-      <p>Dólar oficial: $ ${cotizaciones.venta.oficial}</p>
-      <p>Dólar blue: $ ${cotizaciones.venta.blue}</p>
-      <p>Dólar tarjeta: $ ${cotizaciones.venta.tarjeta}</p>
-      <p>Dólar MEP: $ ${cotizaciones.venta.mep}</p>
-    `;
-  
-    // Limpiar las cotizaciones antes de agregar nuevas
-    seccionCotizaciones.innerHTML = '';
-  
-    // Agregar las cards al contenedor
-    seccionCotizaciones.appendChild(cardCompra);
-    seccionCotizaciones.appendChild(cardVenta);
-  }
-  
-  // Función para actualizar las cotizaciones con valores aleatorios
-  function actualizarCotizaciones() {
-    cotizaciones.compra.oficial = (900 + Math.random() * 100).toFixed(2);
-    cotizaciones.compra.blue = (1100 + Math.random() * 100).toFixed(2);
-    cotizaciones.compra.tarjeta = (Math.random() * 1000).toFixed(2);
-    cotizaciones.compra.mep = (1100 + Math.random() * 50).toFixed(2);
-  
-    cotizaciones.venta.oficial = (950 + Math.random() * 100).toFixed(2);
-    cotizaciones.venta.blue = (1150 + Math.random() * 100).toFixed(2);
-    cotizaciones.venta.tarjeta = (1500 + Math.random() * 200).toFixed(2);
-    cotizaciones.venta.mep = (1100 + Math.random() * 50).toFixed(2);
-  
-    // Mostrar las cotizaciones actualizadas
-    mostrarCotizaciones();
-  }
-  
-  // Crear un botón para actualizar las cotizaciones
-  const actualizarBtn = document.createElement('button');
-  actualizarBtn.textContent = 'Actualizar Cotizaciones';
-  actualizarBtn.style.margin = '20px';
-  actualizarBtn.style.padding = '10px 20px';
-  actualizarBtn.style.fontSize = '16px';
-  actualizarBtn.style.cursor = 'pointer';
-  actualizarBtn.addEventListener('click', actualizarCotizaciones);
-  
-  // Agregar el botón al DOM
-  document.body.appendChild(actualizarBtn);
-  
-  // Llamar a la función inicial para mostrar las cotizaciones
-  mostrarCotizaciones();
-  
+    seccionCotizaciones.appendChild(card);
+    });
+}
+
+// Cargar las cotizaciones al iniciar la página
+mostrarCotizaciones();
